@@ -13,7 +13,7 @@ interface MessagesState {
   clear: () => void;
 }
 
-export const useMessagesStore = create<MessagesState>((set) => ({
+export const useMessagesStore = create<MessagesState>((set, get) => ({
   messages: [],
   loading: false,
 
@@ -29,7 +29,8 @@ export const useMessagesStore = create<MessagesState>((set) => ({
   },
 
   sendMessage: async (channelId: string, content: string) => {
-    await api.post(`/channels/${channelId}/messages`, { content });
+    const message = await api.post<Message>(`/channels/${channelId}/messages`, { content });
+    get().addMessage(message);
   },
 
   addMessage: (message: Message) => {

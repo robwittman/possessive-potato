@@ -3,7 +3,7 @@ import { useServersStore } from '../../stores/servers';
 import { ServerSettings } from '../servers/ServerSettings';
 
 export function ChannelList() {
-  const { channels, activeServerId, activeChannelId, fetchChannels, setActiveChannel, createChannel } =
+  const { channels, activeServerId, activeChannelId, fetchChannels, setActiveChannel, createChannel, fetchMembers } =
     useServersStore();
   const { servers } = useServersStore();
   const [showCreate, setShowCreate] = useState(false);
@@ -16,8 +16,9 @@ export function ChannelList() {
   useEffect(() => {
     if (activeServerId) {
       fetchChannels(activeServerId);
+      fetchMembers(activeServerId);
     }
-  }, [activeServerId, fetchChannels]);
+  }, [activeServerId, fetchChannels, fetchMembers]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();

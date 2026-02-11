@@ -1,15 +1,23 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMessagesStore } from '../../stores/messages';
 import { useServersStore } from '../../stores/servers';
 import { wsClient } from '../../api/ws';
 import type { Message, GatewayEvent } from '../../types';
 
 export function MessageView() {
-  const { activeChannelId } = useServersStore();
+  const { activeChannelId, members } = useServersStore();
   const { messages, loading, fetchMessages, sendMessage, addMessage, updateMessage, removeMessage, clear } =
     useMessagesStore();
   const [input, setInput] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  const memberMap = useMemo(() => {
+    const map = new Map<string, { name: string; avatar_url: string | null }>();
+    for (const m of members) {
+      map.set(m.user_id, { name: m.display_name || m.username, avatar_url: m.avatar_url });
+    }
+    return map;
+  }, [members]);
 
   useEffect(() => {
     if (!activeChannelId) {
@@ -74,22 +82,32 @@ export function MessageView() {
         {!loading && messages.length === 0 && (
           <p className="text-gray-500 text-center">No messages yet. Say something!</p>
         )}
-        {messages.map((msg) => (
-          <div key={msg.id} className="group hover:bg-gray-600/30 px-2 py-1 rounded">
-            <div className="flex items-baseline gap-2">
-              <span className="font-medium text-white text-sm">
-                {msg.author_id}
-              </span>
-              <span className="text-xs text-gray-500">
-                {new Date(msg.created_at).toLocaleTimeString()}
-              </span>
-              {msg.edited_at && (
-                <span className="text-xs text-gray-600">(edited)</span>
-              )}
+        {messages.map((msg) => {
+          const member = memberMap.get(msg.author_id);
+          const authorName = member?.name ?? msg.author_id;
+          const initial = authorName[0]?.toUpperCase() ?? '?';
+          return (
+            <div key={msg.id} className="group hover:bg-gray-600/30 px-2 py-1 rounded flex gap-3">
+              <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-sm font-medium flex-shrink-0 mt-0.5">
+                {initial}
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-baseline gap-2">
+                  <span className="font-medium text-white text-sm">
+                    {authorName}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {new Date(msg.created_at).toLocaleTimeString()}
+                  </span>
+                  {msg.edited_at && (
+                    <span className="text-xs text-gray-600">(edited)</span>
+                  )}
+                </div>
+                <p className="text-gray-300 text-sm">{msg.content}</p>
+              </div>
             </div>
-            <p className="text-gray-300 text-sm">{msg.content}</p>
-          </div>
-        ))}
+          );
+        })}
         <div ref={bottomRef} />
       </div>
 

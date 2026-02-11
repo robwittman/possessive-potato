@@ -62,11 +62,11 @@ class WebSocketClient {
   }
 
   subscribe(channelID: string) {
-    this.send({ op: 'SUBSCRIBE', d: { channel_id: Number(channelID) } });
+    this.send({ op: 'SUBSCRIBE', d: { channel_id: channelID } });
   }
 
   unsubscribe(channelID: string) {
-    this.send({ op: 'UNSUBSCRIBE', d: { channel_id: Number(channelID) } });
+    this.send({ op: 'UNSUBSCRIBE', d: { channel_id: channelID } });
   }
 
   onEvent(handler: EventHandler) {
