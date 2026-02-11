@@ -1,0 +1,56 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: potato
+      POSTGRES_PASSWORD: potato
+      POSTGRES_DB: possessive_potato
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: api
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgres://potato:potato@postgres:5432/possessive_potato?sslmode=disable
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: change-me-in-production
+      LISTEN_ADDR: :8080
+    depends_on:
+      - postgres
+      - redis
+
+  gateway:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: gateway
+    ports:
+      - "8081:8081"
+    environment:
+      DATABASE_URL: postgres://potato:potato@postgres:5432/possessive_potato?sslmode=disable
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: change-me-in-production
+      LISTEN_ADDR: :8081
+    depends_on:
+      - postgres
+      - redis
+
+volumes:
+  pgdata:
+  redisdata:
