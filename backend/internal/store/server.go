@@ -118,3 +118,27 @@ func (s *ServerStore) Delete(ctx context.Context, id int64) error {
 	}
 	return nil
 }
+
+func (s *ServerStore) ListMembers(ctx context.Context, serverID int64) ([]Member, error) {
+	rows, err := s.db.Query(ctx,
+		`SELECT u.id, u.username, u.display_name, u.avatar_url, sm.nickname, sm.joined_at
+		 FROM server_members sm
+		 JOIN users u ON sm.user_id = u.id
+		 WHERE sm.server_id = $1
+		 ORDER BY sm.joined_at`, serverID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("list members: %w", err)
+	}
+	defer rows.Close()
+
+	var members []Member
+	for rows.Next() {
+		var m Member
+		if err := rows.Scan(&m.UserID, &m.Username, &m.DisplayName, &m.AvatarURL, &m.Nickname, &m.JoinedAt); err != nil {
+			return nil, fmt.Errorf("scan member: %w", err)
+		}
+		members = append(members, m)
+	}
+	return members, nil
+}

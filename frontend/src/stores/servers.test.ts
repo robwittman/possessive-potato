@@ -7,6 +7,7 @@ vi.mock('../api/client', () => ({
     get: vi.fn(),
     post: vi.fn(),
     patch: vi.fn(),
+    put: vi.fn(),
     delete: vi.fn(),
   },
 }));
@@ -22,6 +23,8 @@ beforeEach(() => {
     channels: [],
     activeServerId: null,
     activeChannelId: null,
+    roles: [],
+    members: [],
   });
   vi.clearAllMocks();
 });
@@ -79,6 +82,61 @@ describe('useServersStore', () => {
       expect(mockedApi.patch).toHaveBeenCalledWith('/servers/1', { name: 'New Name' });
       expect(result.name).toBe('New Name');
       expect(useServersStore.getState().servers[0].name).toBe('New Name');
+    });
+  });
+
+  describe('fetchRoles', () => {
+    it('should fetch and set roles', async () => {
+      const mockRoles = [
+        { id: '1', server_id: '100', name: '@everyone', permissions: 192, color: null, position: 0 },
+        { id: '2', server_id: '100', name: 'Moderator', permissions: 4, color: '#3498db', position: 1 },
+      ];
+      mockedApi.get.mockResolvedValueOnce(mockRoles);
+
+      await useServersStore.getState().fetchRoles('100');
+
+      expect(mockedApi.get).toHaveBeenCalledWith('/servers/100/roles');
+      expect(useServersStore.getState().roles).toEqual(mockRoles);
+    });
+  });
+
+  describe('createRole', () => {
+    it('should create role and add to list', async () => {
+      const newRole = { id: '3', server_id: '100', name: 'Admin', permissions: 1, color: null, position: 1 };
+      mockedApi.post.mockResolvedValueOnce(newRole);
+
+      const result = await useServersStore.getState().createRole('100', { name: 'Admin', permissions: 1 });
+
+      expect(mockedApi.post).toHaveBeenCalledWith('/servers/100/roles', { name: 'Admin', permissions: 1 });
+      expect(result).toEqual(newRole);
+      expect(useServersStore.getState().roles).toContainEqual(newRole);
+    });
+  });
+
+  describe('deleteRole', () => {
+    it('should delete role and remove from list', async () => {
+      const role = { id: '2', server_id: '100', name: 'Mod', permissions: 4, color: null, position: 1 };
+      useServersStore.setState({ roles: [role] });
+      mockedApi.delete.mockResolvedValueOnce(undefined);
+
+      await useServersStore.getState().deleteRole('100', '2');
+
+      expect(mockedApi.delete).toHaveBeenCalledWith('/servers/100/roles/2');
+      expect(useServersStore.getState().roles).toHaveLength(0);
+    });
+  });
+
+  describe('fetchMembers', () => {
+    it('should fetch and set members', async () => {
+      const mockMembers = [
+        { user_id: '1', username: 'alice', display_name: 'Alice', avatar_url: null, nickname: null, joined_at: '' },
+      ];
+      mockedApi.get.mockResolvedValueOnce(mockMembers);
+
+      await useServersStore.getState().fetchMembers('100');
+
+      expect(mockedApi.get).toHaveBeenCalledWith('/servers/100/members');
+      expect(useServersStore.getState().members).toEqual(mockMembers);
     });
   });
 });

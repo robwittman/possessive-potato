@@ -63,6 +63,54 @@ export interface Invite {
   created_at: string;
 }
 
+export interface Role {
+  id: string;
+  server_id: string;
+  name: string;
+  permissions: number;
+  color: string | null;
+  position: number;
+}
+
+export interface Member {
+  user_id: string;
+  username: string;
+  display_name: string;
+  avatar_url: string | null;
+  nickname: string | null;
+  joined_at: string;
+}
+
+export const Permissions = {
+  Admin: 1 << 0,
+  ManageServer: 1 << 1,
+  ManageChannels: 1 << 2,
+  ManageRoles: 1 << 3,
+  KickMembers: 1 << 4,
+  BanMembers: 1 << 5,
+  SendMessages: 1 << 6,
+  ReadMessages: 1 << 7,
+  ManageMessages: 1 << 8,
+  Connect: 1 << 9,
+  Speak: 1 << 10,
+  ShareScreen: 1 << 11,
+} as const;
+
+export const PermissionLabels: Record<number, string> = {
+  [Permissions.Admin]: 'Administrator',
+  [Permissions.ManageServer]: 'Manage Server',
+  [Permissions.ManageChannels]: 'Manage Channels',
+  [Permissions.ManageRoles]: 'Manage Roles',
+  [Permissions.KickMembers]: 'Kick Members',
+  [Permissions.BanMembers]: 'Ban Members',
+  [Permissions.SendMessages]: 'Send Messages',
+  [Permissions.ReadMessages]: 'Read Messages',
+  [Permissions.ManageMessages]: 'Manage Messages',
+  [Permissions.Connect]: 'Connect',
+  [Permissions.Speak]: 'Speak',
+  [Permissions.ShareScreen]: 'Share Screen',
+};
+
 export interface GatewayEvent {
   t: string;
   d: unknown;
