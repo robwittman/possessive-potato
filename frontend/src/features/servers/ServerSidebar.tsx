@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useServersStore } from '../../stores/servers';
+import { JoinServerModal } from './JoinServerModal';
 
 export function ServerSidebar() {
   const { servers, activeServerId, fetchServers, setActiveServer, createServer } = useServersStore();
   const [showCreate, setShowCreate] = useState(false);
+  const [showJoin, setShowJoin] = useState(false);
   const [name, setName] = useState('');
 
   useEffect(() => {
@@ -44,6 +46,14 @@ export function ServerSidebar() {
         +
       </button>
 
+      <button
+        onClick={() => setShowJoin(true)}
+        className="w-12 h-12 rounded-2xl bg-gray-700 hover:bg-indigo-600 hover:rounded-xl flex items-center justify-center text-indigo-400 hover:text-white text-lg transition-all"
+        title="Join Server"
+      >
+        &#x2192;
+      </button>
+
       {showCreate && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-gray-800 p-6 rounded-lg w-full max-w-sm">
@@ -76,6 +86,8 @@ export function ServerSidebar() {
           </div>
         </div>
       )}
+
+      {showJoin && <JoinServerModal onClose={() => setShowJoin(false)} />}
     </div>
   );
 }

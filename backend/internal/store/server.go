@@ -77,6 +77,40 @@ func (s *ServerStore) AddMember(ctx context.Context, serverID, userID int64) err
 	return nil
 }
 
+func (s *ServerStore) Update(ctx context.Context, server *model.Server) error {
+	_, err := s.db.Exec(ctx,
+		`UPDATE servers SET name = $1, icon_url = $2 WHERE id = $3`,
+		server.Name, server.IconURL, server.ID,
+	)
+	if err != nil {
+		return fmt.Errorf("update server: %w", err)
+	}
+	return nil
+}
+
+func (s *ServerStore) IsMember(ctx context.Context, serverID, userID int64) (bool, error) {
+	var exists bool
+	err := s.db.QueryRow(ctx,
+		`SELECT EXISTS(SELECT 1 FROM server_members WHERE server_id = $1 AND user_id = $2)`,
+		serverID, userID,
+	).Scan(&exists)
+	if err != nil {
+		return false, fmt.Errorf("check membership: %w", err)
+	}
+	return exists, nil
+}
+
+func (s *ServerStore) RemoveMember(ctx context.Context, serverID, userID int64) error {
+	_, err := s.db.Exec(ctx,
+		`DELETE FROM server_members WHERE server_id = $1 AND user_id = $2`,
+		serverID, userID,
+	)
+	if err != nil {
+		return fmt.Errorf("remove member: %w", err)
+	}
+	return nil
+}
+
 func (s *ServerStore) Delete(ctx context.Context, id int64) error {
 	_, err := s.db.Exec(ctx, `DELETE FROM servers WHERE id = $1`, id)
 	if err != nil {

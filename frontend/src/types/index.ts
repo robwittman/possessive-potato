@@ -53,6 +53,16 @@ export interface AuthResponse {
   user: User;
 }
 
+export interface Invite {
+  code: string;
+  server_id: string;
+  created_by: string;
+  max_uses: number | null;
+  uses: number;
+  expires_at: string | null;
+  created_at: string;
+}
+
 export interface GatewayEvent {
   t: string;
   d: unknown;

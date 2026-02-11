@@ -63,6 +63,40 @@ func (s *ChannelStore) ListByServer(ctx context.Context, serverID int64) ([]mode
 	return channels, nil
 }
 
+func (s *ChannelStore) Update(ctx context.Context, ch *model.Channel) error {
+	_, err := s.db.Exec(ctx,
+		`UPDATE channels SET name = $1, topic = $2 WHERE id = $3`,
+		ch.Name, ch.Topic, ch.ID,
+	)
+	if err != nil {
+		return fmt.Errorf("update channel: %w", err)
+	}
+	return nil
+}
+
+func (s *ChannelStore) UpdatePositions(ctx context.Context, serverID int64, positions []ChannelPosition) error {
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	for _, p := range positions {
+		_, err := tx.Exec(ctx,
+			`UPDATE channels SET position = $1 WHERE id = $2 AND server_id = $3`,
+			p.Position, p.ID, serverID,
+		)
+		if err != nil {
+			return fmt.Errorf("update position: %w", err)
+		}
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit tx: %w", err)
+	}
+	return nil
+}
+
 func (s *ChannelStore) Delete(ctx context.Context, id int64) error {
 	_, err := s.db.Exec(ctx, `DELETE FROM channels WHERE id = $1`, id)
 	if err != nil {
